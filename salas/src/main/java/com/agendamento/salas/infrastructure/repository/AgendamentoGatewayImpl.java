@@ -80,7 +80,6 @@ public class AgendamentoGatewayImpl implements AgendamentoGateway {
 
     @Override
     public void deletar(Agendamento agendamento) {
-        // Para deletar, precisamos passar o modelo JPA
         repository.delete(toJPA(agendamento));
     }
 }
