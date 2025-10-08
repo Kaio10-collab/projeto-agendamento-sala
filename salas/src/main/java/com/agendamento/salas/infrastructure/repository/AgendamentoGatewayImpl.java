@@ -3,6 +3,8 @@ package com.agendamento.salas.infrastructure.repository;
 import com.agendamento.salas.application.gateway.AgendamentoGateway;
 import com.agendamento.salas.domain.entity.Agendamento;
 import com.agendamento.salas.infrastructure.repository.model.AgendamentoJPA;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -52,7 +54,9 @@ public class AgendamentoGatewayImpl implements AgendamentoGateway {
 
     // --- Implementação do Gateway ---
 
+    // Regra do Cache: Quando salvamos, o cache de 'agendamentosPorPessoa' deve ser limpo.
     @Override
+    @CacheEvict(value = "agendamentosPorPessoa", allEntries = true) // Limpa o cache após criar ou atualizar
     public Agendamento salvar(Agendamento agendamento) {
         AgendamentoJPA jpa = toJPA(agendamento);
         AgendamentoJPA savedJpa = repository.save(jpa);
@@ -71,14 +75,18 @@ public class AgendamentoGatewayImpl implements AgendamentoGateway {
                 .collect(Collectors.toList());
     }
 
+    // Regra do Cache: Antes de ir ao banco, checa o cache. Se não encontrar, busca no banco e armazena o resultado.
     @Override
+    @Cacheable(value = "agendamentosPorPessoa", key = "#nome + #sobrenome")
     public List<Agendamento> buscarPorPessoa(String nome, String sobrenome) {
         return repository.findByNomePessoaAndSobrenomePessoa(nome, sobrenome).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
+    // Regra do Cache: Deletar também deve invalidar o cache
     @Override
+    @CacheEvict(value = "agendamentosPorPessoa", allEntries = true)
     public void deletar(Agendamento agendamento) {
         repository.delete(toJPA(agendamento));
     }
