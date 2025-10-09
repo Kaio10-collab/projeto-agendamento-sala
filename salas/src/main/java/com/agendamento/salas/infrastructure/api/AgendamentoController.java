@@ -3,6 +3,7 @@ package com.agendamento.salas.infrastructure.api;
 import com.agendamento.salas.application.usecase.AtualizarAgendamentoMapper;
 import com.agendamento.salas.application.usecase.BuscarAgendamentosPorPessoaMapper;
 import com.agendamento.salas.application.usecase.CriarAgendamentoMapper;
+import com.agendamento.salas.application.usecase.DeletarAgendamentoMapper;
 import com.agendamento.salas.application.usecase.dto.AtualizarAgendamentoRequest;
 import com.agendamento.salas.application.usecase.dto.CriarAgendamentoRequest;
 import com.agendamento.salas.domain.entity.Agendamento;
@@ -24,6 +25,7 @@ public class AgendamentoController {
     private final CriarAgendamentoMapper criarAgendamentoMapper;
     private final BuscarAgendamentosPorPessoaMapper buscarAgendamentosPorPessoaMapper;
     private final AtualizarAgendamentoMapper atualizarAgendamentoMapper;
+    private final DeletarAgendamentoMapper deletarAgendamentoMapper;
 
     // Endpoint para criar um novo agendamento
     @PostMapping
@@ -56,6 +58,7 @@ public class AgendamentoController {
         return ResponseEntity.ok(responseList);
     }
 
+    // Endpoint para atualizar agendamentos
     @PutMapping("/{id}") // Usa o ID na URL
     public ResponseEntity<AgendamentoResponse> atualizarAgendamento(
             @PathVariable Long id,
@@ -74,5 +77,19 @@ public class AgendamentoController {
 
         // Retorna HTTP 200 OK
         return ResponseEntity.ok(response);
+    }
+
+    // Endpoint para deletar um agendamento
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarAgendamento(
+            @PathVariable Long id,
+            @RequestParam String nomePessoa,
+            @RequestParam String sobrenomePessoa,
+            @RequestParam String nomeSala) {
+
+        deletarAgendamentoMapper.execute(id, nomePessoa, sobrenomePessoa, nomeSala);
+
+        // Retorna HTTP 204 No Content (padrão para exclusão bem-sucedida)
+        return ResponseEntity.noContent().build();
     }
 }
