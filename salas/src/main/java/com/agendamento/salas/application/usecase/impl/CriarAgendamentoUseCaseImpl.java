@@ -6,18 +6,15 @@ import com.agendamento.salas.application.usecase.CriarAgendamentoMapper;
 import com.agendamento.salas.application.usecase.dto.CriarAgendamentoRequest;
 import com.agendamento.salas.domain.entity.Agendamento;
 import com.agendamento.salas.domain.exception.RegraDeNegocioException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class CriarAgendamentoUseCaseImpl implements CriarAgendamentoMapper {
 
     private final AgendamentoGateway agendamentoGateway;
     private final ValidadorDeAgendamento validador;
-
-    public CriarAgendamentoUseCaseImpl(AgendamentoGateway agendamentoGateway, ValidadorDeAgendamento validador) {
-        this.agendamentoGateway = agendamentoGateway;
-        this.validador = validador;
-    }
 
     @Override
     public Agendamento execute(CriarAgendamentoRequest request) {
