@@ -1,12 +1,13 @@
 package com.agendamento.salas.infrastructure.api;
 
+import com.agendamento.salas.application.usecase.AtualizarAgendamentoMapper;
 import com.agendamento.salas.application.usecase.BuscarAgendamentosPorPessoaMapper;
 import com.agendamento.salas.application.usecase.CriarAgendamentoMapper;
+import com.agendamento.salas.application.usecase.dto.AtualizarAgendamentoRequest;
 import com.agendamento.salas.application.usecase.dto.CriarAgendamentoRequest;
-import com.agendamento.salas.application.usecase.impl.BuscarAgendamentosPorPessoaUseCaseImpl;
-import com.agendamento.salas.application.usecase.impl.CriarAgendamentoUseCaseImpl;
 import com.agendamento.salas.domain.entity.Agendamento;
 import com.agendamento.salas.infrastructure.api.dto.AgendamentoResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,26 +17,20 @@ import java.util.stream.Collectors;
 
 // essa anotação marca a classe como um Controller REST
 @RestController
+@RequiredArgsConstructor // injeta o constructor para classe atribuidas como final, no caso as classes private final
 @RequestMapping("/v1/agendamentos") // Define o caminho base da API
 public class AgendamentoController {
 
-    private final CriarAgendamentoMapper criarAgendamentoUseCase;
-    private final BuscarAgendamentosPorPessoaMapper buscarAgendamentosUseCase;
-
-    // Injeção da Porta de Entrada (o Use Case)
-    public AgendamentoController(
-            CriarAgendamentoMapper criarAgendamentoUseCase,
-            BuscarAgendamentosPorPessoaMapper buscarAgendamentosUseCase) {
-        this.criarAgendamentoUseCase = criarAgendamentoUseCase;
-        this.buscarAgendamentosUseCase = buscarAgendamentosUseCase;
-    }
+    private final CriarAgendamentoMapper criarAgendamentoMapper;
+    private final BuscarAgendamentosPorPessoaMapper buscarAgendamentosPorPessoaMapper;
+    private final AtualizarAgendamentoMapper atualizarAgendamentoMapper;
 
     // Endpoint para criar um novo agendamento
     @PostMapping
     public ResponseEntity<AgendamentoResponse> criarAgendamento(@RequestBody CriarAgendamentoRequest request) {
 
         // O Controller chama o Use Case, que orquestra a lógica
-        Agendamento agendamentoSalvo = criarAgendamentoUseCase.execute(request);
+        Agendamento agendamentoSalvo = criarAgendamentoMapper.execute(request);
 
         // Mapeia a Entidade de Negócio para o DTO de Resposta
         AgendamentoResponse response = AgendamentoResponse.fromDomain(agendamentoSalvo);
@@ -50,7 +45,7 @@ public class AgendamentoController {
             @RequestParam String nome,
             @RequestParam String sobrenome) {
 
-        List<Agendamento> agendamentos = buscarAgendamentosUseCase.execute(nome, sobrenome);
+        List<Agendamento> agendamentos = buscarAgendamentosPorPessoaMapper.execute(nome, sobrenome);
 
         // Mapeia a lista de Entidades de Negócio para a lista de DTOs de Resposta
         List<AgendamentoResponse> responseList = agendamentos.stream()
@@ -59,5 +54,25 @@ public class AgendamentoController {
 
         // Retorna a lista e o status HTTP 200 OK
         return ResponseEntity.ok(responseList);
+    }
+
+    @PutMapping("/{id}") // Usa o ID na URL
+    public ResponseEntity<AgendamentoResponse> atualizarAgendamento(
+            @PathVariable Long id,
+            @RequestBody AtualizarAgendamentoRequest request) {
+
+        // Cria uma requisição com o ID da URL
+        AtualizarAgendamentoRequest requestComId = new AtualizarAgendamentoRequest(
+                id,
+                request.nomeSala(),
+                request.novaDataHoraInicio(),
+                request.novaDataHoraFim()
+        );
+
+        Agendamento agendamentoAtualizado = atualizarAgendamentoMapper.execute(requestComId);
+        AgendamentoResponse response = AgendamentoResponse.fromDomain(agendamentoAtualizado);
+
+        // Retorna HTTP 200 OK
+        return ResponseEntity.ok(response);
     }
 }
