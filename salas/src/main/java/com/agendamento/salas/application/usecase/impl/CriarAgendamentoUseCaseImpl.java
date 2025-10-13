@@ -1,6 +1,7 @@
 package com.agendamento.salas.application.usecase.impl;
 
 import com.agendamento.salas.application.gateway.AgendamentoGateway;
+import com.agendamento.salas.application.service.NotificadorAssincrono;
 import com.agendamento.salas.application.service.ValidadorDeAgendamento;
 import com.agendamento.salas.application.usecase.CriarAgendamentoMapper;
 import com.agendamento.salas.application.usecase.dto.CriarAgendamentoRequest;
@@ -15,6 +16,7 @@ public class CriarAgendamentoUseCaseImpl implements CriarAgendamentoMapper {
 
     private final AgendamentoGateway agendamentoGateway;
     private final ValidadorDeAgendamento validador;
+    private final NotificadorAssincrono notificadorAssincrono;
 
     @Override
     public Agendamento execute(CriarAgendamentoRequest request) {
@@ -40,6 +42,13 @@ public class CriarAgendamentoUseCaseImpl implements CriarAgendamentoMapper {
         validador.verificarDisponibilidadeDeSala(novoAgendamento);
         validador.validarNomeSala(novoAgendamento.nomeSala());
 
-        return agendamentoGateway.salvar(novoAgendamento);
+        Agendamento agendamentoSalvo = agendamentoGateway.salvar(novoAgendamento);
+
+        // Chamada Assíncrona (tarefa longa executada em segundo plano)
+        // O Use Case dispara a notificação e imediatamente segue em frente,
+        // retornando o resultado para o Controller sem esperar os 3 segundos.
+        notificadorAssincrono.notificarAgendamentoCriado(agendamentoSalvo);
+
+        return agendamentoSalvo;
     }
 }

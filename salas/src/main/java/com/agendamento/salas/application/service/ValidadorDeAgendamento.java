@@ -3,6 +3,7 @@ package com.agendamento.salas.application.service;
 import com.agendamento.salas.application.gateway.AgendamentoGateway;
 import com.agendamento.salas.domain.entity.Agendamento;
 import com.agendamento.salas.domain.exception.RegraDeNegocioException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
@@ -10,14 +11,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class ValidadorDeAgendamento {
 
     private final AgendamentoGateway agendamentoGateway;
     private final List<String> salasValidas = List.of("Stranger", "Thor", "Escarlate");
-
-    public ValidadorDeAgendamento(AgendamentoGateway agendamentoGateway) {
-        this.agendamentoGateway = agendamentoGateway;
-    }
 
     // --- MÉTODOS PÚBLICOS DE VALIDAÇÃO REUTILIZÁVEIS ---
 
@@ -48,7 +46,6 @@ public class ValidadorDeAgendamento {
     }
 
     public void verificarDisponibilidadeDeSala(Agendamento agendamento) {
-        // Esta validação precisa do Gateway para checar o banco
         List<Agendamento> conflitos = agendamentoGateway.buscarConflitos(
                 agendamento.nomeSala(),
                 agendamento.dataHoraInicio(),
@@ -56,7 +53,7 @@ public class ValidadorDeAgendamento {
         );
 
         if (!conflitos.isEmpty()) {
-            LocalDateTime fimConflito = conflitos.get(0).dataHoraFim();
+            var fimConflito = conflitos.get(0).dataHoraFim();
             throw new RegraDeNegocioException(
                     "Sala " + agendamento.nomeSala() + " está ocupada. Ficará livre após: " + fimConflito
             );
