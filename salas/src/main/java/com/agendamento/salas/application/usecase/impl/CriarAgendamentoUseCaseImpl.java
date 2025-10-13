@@ -7,6 +7,7 @@ import com.agendamento.salas.application.usecase.CriarAgendamentoMapper;
 import com.agendamento.salas.application.usecase.dto.CriarAgendamentoRequest;
 import com.agendamento.salas.domain.entity.Agendamento;
 import com.agendamento.salas.domain.exception.RegraDeNegocioException;
+import com.agendamento.salas.infrastructure.message.AgendamentoMessageProducer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ public class CriarAgendamentoUseCaseImpl implements CriarAgendamentoMapper {
     private final AgendamentoGateway agendamentoGateway;
     private final ValidadorDeAgendamento validador;
     private final NotificadorAssincrono notificadorAssincrono;
+    private final AgendamentoMessageProducer messageProducer;
 
     @Override
     public Agendamento execute(CriarAgendamentoRequest request) {
@@ -48,6 +50,9 @@ public class CriarAgendamentoUseCaseImpl implements CriarAgendamentoMapper {
         // O Use Case dispara a notificação e imediatamente segue em frente,
         // retornando o resultado para o Controller sem esperar os 3 segundos.
         notificadorAssincrono.notificarAgendamentoCriado(agendamentoSalvo);
+
+        // Mensageria (Para tarefas mais críticas ou que serão processadas por outro serviço)
+        messageProducer.enviarMensagemAgendamentoCriado(agendamentoSalvo);
 
         return agendamentoSalvo;
     }
